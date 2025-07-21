@@ -1,2 +1,3 @@
-# go-pokedex
-Boot.dev course on building a pokedex in Go
+# pokedexcli
+
+Boot.dev course on building a cli pokedex in Go
