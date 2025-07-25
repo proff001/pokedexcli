@@ -27,6 +27,11 @@ func setCommands() {
 			desc: "Displays a help message",
 			cb: commandHelp,
 		},
+		"map": {
+			name: "map",
+			desc: "Displays a list of all the Pokemon locations",
+			cb: commandMap,
+		},
 	}
 }
 
@@ -70,6 +75,19 @@ func commandHelp() error {
 	
 	for _, command := range commands {
 		fmt.Printf("%s: %s\n", command.name, command.desc)
+	}
+
+	return nil
+}
+
+func commandMap() error {
+	locations, err := getLocations()
+	if err != nil {
+		return err
+	}
+
+	for _, location := range locations {
+		fmt.Printf("%s\n", location)
 	}
 
 	return nil
