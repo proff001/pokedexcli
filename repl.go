@@ -7,10 +7,16 @@ import (
 	"strings"
 )
 
+type cliCommandCfg struct {
+	next string
+	prev string
+}
+
 type cliCommand struct {
 	name string
 	desc string
 	cb   func() error
+	config* cliCommandCfg
 }
 
 var commands = map[string]cliCommand{}
@@ -21,16 +27,28 @@ func setCommands() {
 			name: "exit",
 			desc: "Exit the Pokedex",
 			cb: commandExit,
+			config: &cliCommandCfg{
+				next: "",
+				prev: "",
+			},
 		},
 		"help": {
 			name: "help",
 			desc: "Displays a help message",
 			cb: commandHelp,
+			config: &cliCommandCfg{
+				next: "",
+				prev: "",
+			},
 		},
 		"map": {
 			name: "map",
 			desc: "Displays a list of all the Pokemon locations",
 			cb: commandMap,
+			config: &cliCommandCfg{
+				next: "",
+				prev: "",
+			},
 		},
 	}
 }
@@ -81,13 +99,18 @@ func commandHelp() error {
 }
 
 func commandMap() error {
-	locations, err := getLocations()
+	config := *(commands["map"].config)
+	locationData, err := getLocations(config.next)
+
 	if err != nil {
 		return err
 	}
 
-	for _, location := range locations {
-		fmt.Printf("%s\n", location)
+	fmt.Printf("Locations: %v\n", locationData.Count)
+
+	for _, location := range locationData.Results {
+		fmt.Printf("%v\n", location)
+		fmt.Printf("%s\n", location.Name)
 	}
 
 	return nil

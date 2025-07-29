@@ -6,27 +6,36 @@ import (
 	"net/http"
 )
 
-const url = "https://pokeapi.co/api/v2/"
+type LocationAreas struct {
+	Count    int    `json:"count"`
+	Next     string `json:"next"`
+	Previous any    `json:"previous"`
+	Results  []struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"results"`
+}
 
-func getLocations() ([]string, error) {
-	endpoint := "location-area"
-	res, err := http.Get(url + endpoint)
+func getLocations(url string) (LocationAreas, error) {
+	if url == "" {
+		url = "https://pokeapi.co/api/v2/location-area"
+	}
+
+	res, err := http.Get(url)
 
 	if err != nil {
-		return nil, fmt.Errorf("error fetching locations: %s", err)
+		return LocationAreas{}, fmt.Errorf("error fetching locations: %s", err)
 	}
 
 	defer res.Body.Close()
 
 	var data any
-	locations := []string{}
+	locations := LocationAreas{}
 	decoder := json.NewDecoder(res.Body)
 
 	if err := decoder.Decode(&data); err != nil {
-		return nil, fmt.Errorf("error decoding locations: %s", err)
+		return LocationAreas{}, fmt.Errorf("error decoding locations: %s", err)
 	}
 
-	fmt.Printf("%+v\n", data)
-	
 	return locations, nil
 }
