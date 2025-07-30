@@ -5,59 +5,23 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/proff001/pokedexcli/internal/pokeapi"
 )
 
-type cliCommandCfg struct {
-	next string
-	prev string
+type replConfig struct {
+	pokeapiClient   pokeapi.Client
+	locationNextUrl *string
+	locationPrevUrl *string
 }
 
-type cliCommand struct {
+type replCommand struct {
 	name string
 	desc string
-	cb   func() error
-	config* cliCommandCfg
+	cb   func(*replConfig) error
 }
 
-var commands = map[string]cliCommand{}
-
-func setCommands() {
-	commands = map[string]cliCommand{
-		"exit": {
-			name: "exit",
-			desc: "Exit the Pokedex",
-			cb: commandExit,
-			config: &cliCommandCfg{
-				next: "",
-				prev: "",
-			},
-		},
-		"help": {
-			name: "help",
-			desc: "Displays a help message",
-			cb: commandHelp,
-			config: &cliCommandCfg{
-				next: "",
-				prev: "",
-			},
-		},
-		"map": {
-			name: "map",
-			desc: "Displays a list of all the Pokemon locations",
-			cb: commandMap,
-			config: &cliCommandCfg{
-				next: "",
-				prev: "",
-			},
-		},
-	}
-}
-
-func startRepl() {
-	if len(commands) == 0 {
-		setCommands()
-	}
-
+func startRepl(cfg *replConfig) {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -65,16 +29,21 @@ func startRepl() {
 		scanner.Scan()
 		rawInput := scanner.Text()
 		input := cleanInput(rawInput)
-		command := input[0]
+		requestedcommand := input[0]
 
-		err := commands[command].cb()
+		command, exists := getCommands()[requestedcommand]
 
-		if err != nil {
-			fmt.Print(err)
+		if !exists {
+			fmt.Printf("Unknown command '%s'\n", requestedcommand)
 			continue
 		}
 
-		fmt.Print("\n")
+		err := command.cb(cfg)
+
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
 	}
 }
 
@@ -82,36 +51,27 @@ func cleanInput(input string) []string {
 	return strings.Fields(strings.ToLower(input))
 }
 
-func commandExit() error {
-	fmt.Print("Closing the Pokedex... Goodbye!")
-	os.Exit(0)
-	return nil
-}
-
-func commandHelp() error {
-	fmt.Print("Welcome to the Pokedex!\nUsage:\n\n")
-	
-	for _, command := range commands {
-		fmt.Printf("%s: %s\n", command.name, command.desc)
+func getCommands() map[string]replCommand {
+	return map[string]replCommand{
+		"exit": {
+			name: "exit",
+			desc: "Exit the Pokedex",
+			cb:   commandExit,
+		},
+		"help": {
+			name: "help",
+			desc: "Displays a help message",
+			cb:   commandHelp,
+		},
+		"map": {
+			name: "map",
+			desc: "Displays a page of 20 Pokemon locations, use 'mapb' to go back",
+			cb:   commandMapf,
+		},
+		"mapb": {
+			name: "mapb",
+			desc: "Displays the previous page of 20 Pokemon locations",
+			cb:   commandMapb,
+		},
 	}
-
-	return nil
-}
-
-func commandMap() error {
-	config := *(commands["map"].config)
-	locationData, err := getLocations(config.next)
-
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Locations: %v\n", locationData.Count)
-
-	for _, location := range locationData.Results {
-		fmt.Printf("%v\n", location)
-		fmt.Printf("%s\n", location.Name)
-	}
-
-	return nil
 }
