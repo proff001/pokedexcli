@@ -13,12 +13,13 @@ type replConfig struct {
 	pokeapiClient   pokeapi.Client
 	locationNextUrl *string
 	locationPrevUrl *string
+	caughtPokemons  map[string]pokeapi.PokemonData
 }
 
 type replCommand struct {
 	name string
 	desc string
-	cb   func(*replConfig) error
+	cb   func(*replConfig, ...string) error
 }
 
 func startRepl(cfg *replConfig) {
@@ -26,10 +27,13 @@ func startRepl(cfg *replConfig) {
 
 	for {
 		fmt.Print("Pokedex> ")
+
 		scanner.Scan()
 		rawInput := scanner.Text()
 		input := cleanInput(rawInput)
+
 		requestedcommand := input[0]
+		args := input[1:]
 
 		command, exists := getCommands()[requestedcommand]
 
@@ -38,7 +42,7 @@ func startRepl(cfg *replConfig) {
 			continue
 		}
 
-		err := command.cb(cfg)
+		err := command.cb(cfg, args...)
 
 		if err != nil {
 			fmt.Println(err)
@@ -72,6 +76,16 @@ func getCommands() map[string]replCommand {
 			name: "mapb",
 			desc: "Displays the previous page of 20 Pokemon locations",
 			cb:   commandMapb,
+		},
+		"explore": {
+			name: "explore <location name>",
+			desc: "Displays all Pokemons you can encounter in a location",
+			cb:   commandExplore,
+		},
+		"catch": {
+			name: "catch <pokemon name>",
+			desc: "Catch a Pokemon",
+			cb:   commandCatch,
 		},
 	}
 }

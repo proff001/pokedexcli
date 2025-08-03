@@ -5,7 +5,7 @@ import (
 	"sort"
 )
 
-func commandHelp(cfg *replConfig) error {
+func commandHelp(cfg *replConfig, args ...string) error {
 	commands := getCommands()
 	keys := make([]string, 0, len(commands))
 
