@@ -92,5 +92,10 @@ func getCommands() map[string]replCommand {
 			desc: "Inspect a Pokemon you have caught",
 			cb:   inspectCommand,
 		},
+		"pokedex": {
+			name: "pokedex",
+			desc: "Displays a list of the Pokemon you have caught",
+			cb:   pokedexCommand,
+		},
 	}
 }
